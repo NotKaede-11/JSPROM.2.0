@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Metrics Analyzer</title>
+    <link rel="icon" type="image/png" href="images/favicon.png">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Mobile Metrics Analyzer</h1>
+            <p class="description">
+                Mobile Metric Analyzer is a tool designed to extract and analyze key performance metrics from mobile device data. It computes the correlation between price and user ratings to offer a straightforward view of value perception. In addition, it extends this analysis by incorporating the number of reviews, providing deeper insights into consumer sentiment and market trends.
+            </p>
+        </header>
+
+        <div class="upload-section">
+            <div class="file-input-container">
+                <button id="uploadBtn" class="upload-btn">Upload CSV File</button>
+                <span id="fileName" class="file-name">No file selected</span>
+                <button id="clearBtn" class="clear-btn">×</button>
+            </div>
+            <input type="file" id="fileInput" accept=".csv" hidden>
+        </div>
+
+        <div class="analysis-options">
+            <div class="correlation-tabs">
+                <div class="tab-button active" data-type="basic">
+                    Basic Correlation
+                    <span class="tab-description">2 Columns Analysis</span>
+                </div>
+                <div class="tab-button" data-type="average">
+                    Average Correlation
+                    <span class="tab-description">3 Columns Analysis</span>
+                </div>
+            </div>
+
+            <div class="column-selectors">
+                <div class="select-group">
+                    <label>Data #1:</label>
+                    <select id="column1" disabled></select>
+                </div>
+                <div class="select-group">
+                    <label>Data #2:</label>
+                    <select id="column2" disabled></select>
+                </div>
+                <div class="select-group" id="column3Group">
+                    <label>Data #3:</label>
+                    <select id="column3" disabled></select>
+                </div>
+            </div>
+
+            <button id="analyzeBtn" class="analyze-btn" disabled>Analyze Correlation</button>
+        </div>
+
+        <div class="results-container">
+            <div id="results" class="results"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
