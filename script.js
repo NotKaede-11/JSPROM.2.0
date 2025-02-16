@@ -4,6 +4,7 @@ class MobileMetricsAnalyzer {
         this.initializeElements();
         this.addEventListeners();
         this.initializeTabs();
+        this.initializeThemeToggle();
     }
 
     initializeElements() {
@@ -39,6 +40,26 @@ class MobileMetricsAnalyzer {
         });
     }
 
+    initializeThemeToggle() {
+        const themeToggle = document.getElementById('themeToggle');
+        const icon = themeToggle.querySelector('i');
+        
+        themeToggle.addEventListener('click', () => {
+            const root = document.documentElement;
+            const currentTheme = root.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            
+            root.setAttribute('data-theme', newTheme);
+            icon.className = newTheme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
+            
+            localStorage.setItem('theme', newTheme);
+        });
+        
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        icon.className = savedTheme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
+    }
+
     handleFileUpload(event) {
         const file = event.target.files[0];
         if (!file) return;
@@ -55,19 +76,38 @@ class MobileMetricsAnalyzer {
     async processCSVFile(file) {
         try {
             const text = await file.text();
-            const rows = text.split('\n').map(row => row.split(','));
-            const headers = rows[0];
             
+            // Use PapaParse for proper CSV handling
+            const results = Papa.parse(text, {
+                header: true,
+                skipEmptyLines: true,
+                transform: (value) => this.extractNumber(value)
+            });
+
+            if (results.errors.length > 0) {
+                this.showError('Error parsing CSV: ' + results.errors[0].message);
+                return;
+            }
+
+            const headers = results.meta.fields;
+            const dataRows = results.data;
+
             this.numericColumns.clear();
-            headers.forEach((header, index) => {
-                const values = rows.slice(1)
-                    .map(row => this.extractNumber(row[index]))
-                    .filter(val => val !== null);
-                
-                if (values.length > 0) {
+            headers.forEach(header => {
+                const values = dataRows
+                    .map(item => item[header])
+                    .filter(val => val !== null && !isNaN(val) && isFinite(val));
+
+                // Match Java's minimum data threshold (10 values)
+                if (values.length >= 10) {
                     this.numericColumns.set(header.trim(), values);
                 }
             });
+
+            if (this.numericColumns.size === 0) {
+                this.showError('No columns with sufficient numeric data found');
+                return;
+            }
 
             this.updateColumnSelectors();
             this.enableAnalysis();
@@ -78,7 +118,12 @@ class MobileMetricsAnalyzer {
 
     extractNumber(value) {
         if (!value) return null;
-        const number = parseFloat(value.replace(/[^0-9.-]/g, ''));
+        // Handle quoted numbers and currency formats
+        const cleanValue = String(value)
+            .replace(/["$,]/g, '')  // Remove quotes, currency symbols, and commas
+            .replace(/[^\d.-]/g, ''); // Remove remaining non-numeric characters
+        
+        const number = parseFloat(cleanValue);
         return isNaN(number) ? null : number;
     }
 
@@ -103,20 +148,14 @@ class MobileMetricsAnalyzer {
 
     calculateCorrelation(x, y) {
         const n = x.length;
-        let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0, sumY2 = 0;
-
-        for (let i = 0; i < n; i++) {
-            sumX += x[i];
-            sumY += y[i];
-            sumXY += x[i] * y[i];
-            sumX2 += x[i] * x[i];
-            sumY2 += y[i] * y[i];
-        }
-
-        const numerator = n * sumXY - sumX * sumY;
-        const denominator = Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
+        const meanX = x.reduce((a, b) => a + b) / n;
+        const meanY = y.reduce((a, b) => a + b) / n;
         
-        return denominator === 0 ? 0 : numerator / denominator;
+        const numerator = x.reduce((sum, xi, i) => sum + (xi - meanX) * (y[i] - meanY), 0);
+        const denomX = Math.sqrt(x.reduce((sum, xi) => sum + Math.pow(xi - meanX, 2), 0));
+        const denomY = Math.sqrt(y.reduce((sum, yi) => sum + Math.pow(yi - meanY, 2), 0));
+        
+        return denomX * denomY === 0 ? 0 : numerator / (denomX * denomY);
     }
 
     performAnalysis() {
@@ -133,13 +172,15 @@ class MobileMetricsAnalyzer {
             const corr23 = this.calculateCorrelation(col2Data, col3Data);
             const corr13 = this.calculateCorrelation(col1Data, col3Data);
             
+            // Handle potential NaN values
+            const average = (corr12 + corr23 + corr13) / 3;
             this.displayResults({
                 correlations: [
                     { pair: `${this.column1.value} vs ${this.column2.value}`, value: corr12.toFixed(4) },
                     { pair: `${this.column2.value} vs ${this.column3.value}`, value: corr23.toFixed(4) },
                     { pair: `${this.column1.value} vs ${this.column3.value}`, value: corr13.toFixed(4) }
                 ],
-                average: ((corr12 + corr23 + corr13) / 3).toFixed(4)
+                average: isNaN(average) ? 'N/A' : average.toFixed(4)
             });
         }
     }

@@ -4,13 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mobile Metrics Analyzer</title>
-    <link rel="icon" type="image/png" href="images/favicon.png">
+    <link rel="icon" type="image/png" href="favicon.png">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
 </head>
 <body>
     <div class="container">
         <header>
+            <div class="theme-toggle">
+                <button id="themeToggle" class="theme-btn">
+                    <i class="fas fa-sun"></i>
+                </button>
+            </div>
             <h1>Mobile Metrics Analyzer</h1>
             <p class="description">
                 Mobile Metric Analyzer is a tool designed to extract and analyze key performance metrics from mobile device data. It computes the correlation between price and user ratings to offer a straightforward view of value perception. In addition, it extends this analysis by incorporating the number of reviews, providing deeper insights into consumer sentiment and market trends.
@@ -40,15 +46,15 @@
 
             <div class="column-selectors">
                 <div class="select-group">
-                    <label>Data #1:</label>
+                    <label>Column 1:</label>
                     <select id="column1" disabled></select>
                 </div>
                 <div class="select-group">
-                    <label>Data #2:</label>
+                    <label>Column 2:</label>
                     <select id="column2" disabled></select>
                 </div>
                 <div class="select-group" id="column3Group">
-                    <label>Data #3:</label>
+                    <label>Column 3:</label>
                     <select id="column3" disabled></select>
                 </div>
             </div>
